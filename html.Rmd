@@ -1,0 +1,52 @@
+---
+title: "html"
+author: "JP"
+date: "5/30/2019"
+output: html_document
+---
+
+HTML also uses `tags`, `attributes`, and `content.`
+```{r}
+html_text(x = ___) #- get text contents
+html_attr(x = ___, name = ___) #- get specific attribute
+html_name(x = ___) #- get tag name
+```
+
+```{r}
+second_xpath_val <- "//*[contains(concat( \" \", @class, \" \" ), concat( \" \", \"fn\", \" \" ))]"
+
+# Extract the element of table_element referred to by second_xpath_val and store it as page_name
+page_name <- html_node(x = table_element, xpath = second_xpath_val)
+
+# Extract the text from page_name
+page_title <- html_text(page_name)
+
+# Print page_title
+page_title
+```
+
+# HTML tables --> dataframes
+HTML tables are dedicated structures: <table>...</table>
+They can be turned into data.frames with `html_table()`
+Use `colnames(table) <- c("name", "second_name")` to name the columns
+
+Non-tables can also become data.frames
+Use data.frame(), with the vectors of text or names or attributes
+
+```{r}
+# Turn table_element into a data frame and assign it to wiki_table
+wiki_table <- html_table(table_element)
+
+# Print wiki_table
+wiki_table
+
+# Rename the columns of wiki_table
+colnames(wiki_table) <- c("key", "value")
+
+# Remove the empty row from wiki_table
+cleaned_table <- subset(wiki_table, !value == "") # drop empty rows
+
+# Print cleaned_table
+cleaned_table
+```
+
