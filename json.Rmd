@@ -1,0 +1,72 @@
+---
+title: "json"
+author: "JP"
+date: "5/30/2019"
+output: html_document
+---
+
+# JSON
+json are only made of two structures: 
+  `objects`: {"title" : "A New Hope", "year" : "1977"}
+  `arrays`: [1977, 1980]
+
+```{r}
+pacman::p_load(httr, jsonlite, rlist, tidyverse)
+```
+
+```{r}
+url <- "http://httpbin.org/get"
+r <- GET(url)
+http_type(r)
+
+writeLines(content(r, as = "text"))
+```
+
+fromJSON() returns a names list for `{objects}` and unnamed lists for `[arrays]`
+```{r}
+movies_json <- '
+[ 
+  {
+    "title" : "A New Hope",
+    "year" : 1977
+  },
+  {
+    "title" : "The Empire Strikes Back",
+    "year" : 1980
+  }
+]'
+
+fromJSON(movies_json, simplifyVector = FALSE) # returns a list
+fromJSON(movies_json, simplifyDataFrame = TRUE) # arrays of objects become data frames
+```
+
+```{r}
+# Load rlist
+library(rlist)
+
+# Examine output of this code
+str(content(resp_json), max.level = 4)
+
+# Store revision list
+revs <- content(resp_json)$query$pages$`41916270`$revisions
+
+# Extract the user element
+user_time <- list.select(revs, user, timestamp)
+
+# Stack to turn into a data frame
+list.stack(user_time)
+```
+
+```{r}
+# Load dplyr
+library(dplyr)
+
+# Pull out revision list
+revs <- content(resp_json)$query$pages$`41916270`$revisions
+
+# Extract user and timestamp
+revs %>%
+  bind_rows() %>% # takes a list and turns it into a data frame          
+  select(user, timestamp)
+```
+

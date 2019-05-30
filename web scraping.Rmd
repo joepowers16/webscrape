@@ -1,0 +1,40 @@
+---
+title: "web scraping"
+author: "JP"
+date: "5/30/2019"
+output: html_document
+---
+
+web scraping involves filtering  html from website to just the data you want. 
+
+See `selector` a browser extension that have useful hover features. 
+```{r}
+pacman::p_load(rvest)
+```
+
+Usually all you need is read_html() to return an xml document, then use html_node() with an xpath string. 
+```{r}
+wiki_r <- read_html("https://en.wikipedia.org/wiki/R_(programming_language)")
+
+# xml_structure(wiki_r) # long
+
+html_node(wiki_r, xpath = "//ul")
+```
+
+```{r}
+# Hadley Wickham's Wikipedia page
+test_url <- "https://en.wikipedia.org/wiki/Hadley_Wickham"
+
+# Read the URL stored as "test_url" with read_html()
+test_xml <- read_html(test_url)
+
+# Print test_xml
+test_xml
+
+# Use html_node() to grab the node with the XPATH stored as `test_node_xpath`
+node <- html_node(x = test_xml, xpath = test_node_xpath)
+
+# Print the first element of the result
+node[[1]]
+```
+

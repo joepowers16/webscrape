@@ -1,0 +1,126 @@
+---
+title: "XML"
+author: "JP"
+date: "5/30/2019"
+output: html_document
+---
+
+XML is `markup` (describing the structure) and `content` (the data).
+
+Most `markup` is in the form of `tags` of the form `<tagname>... </tagname>`
+
+An XML `element` spans from a start tag to an end tag. 
+
+in `<title>A New Hope</title>` "A New Hope" is the `content` between the "title" `tags`.
+
+XML elements can be described as parents, siblings and children based on their hierarchical relationships. 
+
+```{r}
+pacman::p_load(xml2)
+```
+
+```{r}
+# Get XML revision history
+resp_xml <- rev_history("Hadley Wickham", format = "xml")
+
+# Check response is XML 
+http_type(resp_xml)
+
+# Examine returned text with content()
+rev_text <- content(resp_xml, as = "text")
+rev_text
+
+# Turn rev_text into an XML document
+rev_xml <- read_xml(rev_text)
+
+# Examine the structure of rev_xml w/o data
+xml_structure(rev_xml)
+```
+
+# XPATHS
+allow you to specify nodes in an XML document
+```{r}
+movies_xml <- read_xml('<?xml version="1.0" encoding="UTF-8"?>
+<movies>
+  <title>"Star Wars"</title>
+  <movie episode = "IV">
+    <title>A New Hope</title>
+    <year>1977</year>
+  </movie>
+  <movie episode = "V">
+    <title>The Empire Strikes Back</title>
+    <year>1980</year>
+  </movie>
+</movies>')
+```
+
+`/` - to find elements with tag node at this level
+```{r}
+xml_find_all(movies_xml, xpath = "/movies/movie/title")
+```
+
+`//` - find nodes at any level below
+```{r}
+xml_find_all(movies_xml, "//title")
+```
+
+Note that above code also returns "Star Wars" which is higher level data than we probably want.
+
+`@` - to extract `attributes` within another node, e.g., episodes within movies. 
+```{r}
+xml_find_all(movies_xml, "//movie/@episode")
+```
+
+Get nodes with `xml_find_all()`
+Extract contents with `xml_text`, `xml_double()`, `xml_integer()` or `as_list()`
+
+```{r}
+# All rev nodes
+rev_nodes <- xml_find_all(rev_xml, "//rev")
+
+# The first rev node
+first_rev_node <- xml_find_first(rev_xml, "//rev") #xml_find_first() works like xml_find_all() but only extracts first node found
+
+# Find all attributes with xml_attrs()
+xml_attrs(first_rev_node)
+
+# Find user attribute with xml_attr()
+xml_attr(first_rev_node, attr = "user")
+
+# Find user attribute for all rev nodes
+xml_attr(rev_nodes, ns = "rev", attr = "user")
+
+# Find anon attribute for all rev nodes
+xml_attr(rev_nodes, ns = "rev", attr = "anon")
+```
+
+```{r get_revision_history}
+get_revision_history <- function(article_title){
+  # Get raw revision response
+  rev_resp <- rev_history(article_title, format = "xml")
+  
+  # Turn the content() of rev_resp into XML
+  rev_xml <- read_xml(content(rev_resp, "text"))
+  
+  # Find revision nodes
+  rev_nodes <- xml_find_all(rev_xml, "//rev")
+
+  # Parse out usernames
+  user <- xml_attr(rev_nodes, "user")
+  
+  # Parse out timestamps
+  timestamp <- readr::parse_datetime(xml_attr(rev_nodes, "timestamp"))
+  
+  # Parse out content
+  content <- xml_text(rev_nodes)
+  
+  # Return data frame 
+  data.frame(user = user,
+    timestamp = timestamp,
+    content = substr(content, 1, 40))
+}
+
+# Call function for "Hadley Wickham"
+get_revision_history("Hadley Wickham")
+```
+
